@@ -17,7 +17,9 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.List;
 
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 @WebMvcTest(AutorRestController.class)
@@ -37,7 +39,7 @@ public class AutoRestControllerTest {
         when(service.buscarTodos()).thenReturn(List.of(responseBody));
 
         mockMvc.perform(MockMvcRequestBuilders.get(AUTOR_API_URL_PATH).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isOk());
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -47,7 +49,7 @@ public class AutoRestControllerTest {
         when(service.buscarPorId(1L)).thenReturn(responseBody);
 
         mockMvc.perform(MockMvcRequestBuilders.get(AUTOR_API_URL_PATH + "/1").contentType(MediaType.APPLICATION_JSON))
-               .andExpect(MockMvcResultMatchers.status().isOk());
+               .andExpect(status().isOk());
     }
 
 
@@ -58,7 +60,28 @@ public class AutoRestControllerTest {
        when(service.buscarPorId(id)).thenThrow(AutorNaoEncontradoException.class);
 
       mockMvc.perform(MockMvcRequestBuilders.get(AUTOR_API_URL_PATH + "/1").contentType(MediaType.APPLICATION_JSON))
-              .andExpect(MockMvcResultMatchers.status().isNotFound());
+              .andExpect(status().isNotFound());
+
+    }
+
+    @Test
+    void quandoDELETEExcluirPorIdComIdValidoDeveRetornarStatusCode204() throws Exception {
+        var id = 1L;
+
+        doNothing().when(service).excluirPorId(id);
+
+        mockMvc.perform(delete(AUTOR_API_URL_PATH + "/" + id).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void quandoDELETEExcluirPorIdComIdInvalidoDeveRetornarStatusCode404() throws Exception {
+        var id = 1L;
+
+        doThrow(AutorNaoEncontradoException.class).when(service).excluirPorId(id);
+
+        mockMvc.perform(delete(AUTOR_API_URL_PATH + "/" + id).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
 
     }
 
